@@ -72,11 +72,14 @@ server.post("/register", async(request, response) => {
 
     }else{
 
+        // create a User object
         const user = {
             firstname: firstname, 
             lastname: lastname, 
             email: email, 
-            password: password
+            password: password, 
+            is_email_verified: false, 
+            user_role: 0
         }
 
         try{
@@ -135,7 +138,7 @@ server.post("/register", async(request, response) => {
         }catch(error){
             response.send({
                 message: "An internal error ocurred: ",
-                error: error,
+                error: `Here is the error details: ${error.message}`,
                 data: null
             })
 
@@ -154,16 +157,36 @@ server.post("/register", async(request, response) => {
 
 
 // validate user registration code 
-server.get("/verify_registration_email", (request, response) => {
+server.get("/verify_registration_email", async (request, response) => {
     //do validations 
     let query = request.query;
     let user_email = query.email; 
 
     //check the database to find the state of the user's registration 
+    let findresult = await client.db(process.env.DB_NAME).collection("users").findOne({email: user_email})
 
-    response.send({
-        message: "Verify Email now"
-    })
+
+    let is_email_verified = findresult.is_email_verified;
+
+    if(!is_email_verified){
+        // vefify the email
+        // Make the is_email_verified to be true
+       await client.db(process.env.DB_NAME).collection("users").updateOne({email: user_email}, { $set: { is_email_verified: true }})
+        
+       response.send({
+        message: "Email verified successfully", 
+        code: 'success',
+        data: null
+       })
+    }else{
+        response.send({
+            message: "Email verified already. No action needed", 
+            code: "email-verified-already",
+            data: null
+        })
+        
+
+    }
 
 
 });

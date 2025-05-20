@@ -4,40 +4,27 @@ const express = require("express");
 //require dotenv
 require("dotenv").config();
 
-const { MongoClient } = require("mongodb");
-const url = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.qcoqo.mongodb.net/?retryWrites=true`
-
-const client = new MongoClient(url);
-
-const nodemailer = require("nodemailer");
-
 APP_HOST = process.env.HOST;
 APP_PORT = process.env.PORT;
 
 // 2. create the server 
 const server = express();
 
+// import the User class
+const UserClass = require("./Classes/User");
+const user = new UserClass();
+
+
 // Middleware
 server.use(express.json())
 
-// setup the email transport
-const transporter = nodemailer.createTransport({
-    host: process.env.MAIL_HOST,
-    port: process.env.MAIL_PORT,
-    secure: false, // true for 465, false for other ports
-    auth: {
-      user: process.env.MAIL_USERNAME,
-      pass: process.env.MAIL_PASSWORD,
-    },
-  });
+
 
 
 // 3. define your routes/endpoints
 
 // registration
-server.post("/register", async(request, response) => {
-    // do registration 
-    console.log(request.body)
+server.post("/register", (request, response) => {
     let firstname = request.body.firstname; 
     let lastname = request.body.lastname;
     let email = request.body.email;
@@ -72,88 +59,16 @@ server.post("/register", async(request, response) => {
 
     }else{
 
-        // create a User object
-        const user = {
-            firstname: firstname, 
-            lastname: lastname, 
-            email: email, 
-            password: password, 
-            is_email_verified: false, 
-            user_role: 0
-        }
+        const feedback = user.register(firstname, lastname, email, password)
 
-        try{
-            // check to see if user exists already
-            const findresult = await client.db(process.env.DB_NAME).collection("users").findOne({email: email})
-            
-            if(findresult){
-                response.send({
-                    message: "User with this email exists already!", 
-                    code: "error",
-                    data: null
-                })
-            }else{
-                await client.db(process.env.DB_NAME).collection("users").insertOne(user)
-                // once registered, send an email
-                
-                const email_object = transporter.sendMail({
-                    from: '"PayGo" <no-reply@paygo.com>',
-                    to: `${email}`,
-                    subject: `Thank you for Registering ${firstname}!`,
-                    html: `<h3>Hey ${firstname} ${lastname}</h3>
-                            <hr>
-                            <p>Welcome to PayGo!</p>
-                            <p>Please verify your email by clicking the link below: </p>
-                            <p><a href="http://${APP_HOST}:${APP_PORT}/verify_registration_email?email=${email}" target="_blank">http://localhost:1233/verify_registration_email</p>
-    
-                            <hr> 
-                            <p>Regards,</p>
-                            Paygo Support
-                            `, 
-                });
-    
-                if(email_object){
-                    response.send({
-                        message: "User registered. Please check inbox for validation email", 
-                        code: "success", 
-                        data: null
-                    });
-    
-                }else{
-                    response.send({
-                        message: "Could not register this user at this time.",
-                        code: "error",
-                        data: null
-                    })
-                }
+        response.send(feedback);
 
-            }
-
-         
-
-          
-
-         
-
-        }catch(error){
-            response.send({
-                message: "An internal error ocurred: ",
-                error: `Here is the error details: ${error.message}`,
-                data: null
-            })
-
-   }
     }
 
-
     
 
 
-
-
-
-});
-
+})
 
 
 // validate user registration code 

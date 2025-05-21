@@ -106,8 +106,74 @@ class User{
 
     }
 
-    verify_email(){
+    check_registration_params(firstname, lastname, email, password){
+        let errors = [];
 
+        if(!firstname || firstname.length === 0){
+            // no firstname was provided 
+            errors.push("Please provide your firstname")
+        }
+    
+        if(!lastname || lastname.length === 0){
+            errors.push("Provide your lastname");
+        }
+    
+        if(!email || email.length === 0){
+            errors.push("Provide your email")
+        }
+    
+        if(!password || password.length === 0){
+            errors.push("'Provide your password")
+        }
+
+        if(errors.length > 0 ){
+            return {
+                message: "An error ocurred. Please provide all form details",
+                error: errors, 
+                code: "error",
+                data: null
+            }
+        }else{
+            return {
+                message: "All fields provided", 
+                code: "success", 
+                data: null,
+                error: null
+            }
+        }
+
+    }
+
+    async verify_email(email){
+
+
+    //check the database to find the state of the user's registration 
+    let findresult = await client.db(process.env.DB_NAME).collection("users").findOne({email: user_email})
+
+
+    let is_email_verified = findresult.is_email_verified;
+
+    if(!is_email_verified){
+        // vefify the email
+        // Make the is_email_verified to be true
+       await client.db(process.env.DB_NAME).collection("users").updateOne({email: user_email}, { $set: { is_email_verified: true }})
+        
+       return {
+        message: "Email verified successfully", 
+        code: 'success',
+        data: null
+       }
+
+    }else{
+        return {
+            message: "Email verified already. No action needed", 
+            code: "email-verified-already",
+            data: null
+        }
+        
+
+    }
+        
 
     }
 

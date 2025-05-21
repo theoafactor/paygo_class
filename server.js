@@ -30,40 +30,18 @@ server.post("/register", (request, response) => {
     let email = request.body.email;
     let password = request.body.password;
 
-    let errors = [];
-
-    if(!firstname || firstname.length === 0){
-        // no firstname was provided 
-        errors.push("Please provide your firstname")
-    }
-
-    if(!lastname || lastname.length === 0){
-        errors.push("Provide your lastname");
-    }
-
-    if(!email || email.length === 0){
-        errors.push("Provide your email")
-    }
-
-    if(!password || password.length === 0){
-        errors.push("'Provide your password")
-    }
     
-    if(errors.length > 0){
-
-        response.send({
-            message: "An error ocurred. Please provide all form details",
-            error: errors, 
-            data: null
-        })
-
+    const feedback = user.check_registration_params(firstname, lastname, email, password)
+    
+    if(feedback.code === "error"){
+        // show error
+        response.send(feedback);
     }else{
-
         const feedback = user.register(firstname, lastname, email, password)
 
         response.send(feedback);
-
     }
+   
 
     
 
@@ -77,31 +55,14 @@ server.get("/verify_registration_email", async (request, response) => {
     let query = request.query;
     let user_email = query.email; 
 
-    //check the database to find the state of the user's registration 
-    let findresult = await client.db(process.env.DB_NAME).collection("users").findOne({email: user_email})
-
-
-    let is_email_verified = findresult.is_email_verified;
-
-    if(!is_email_verified){
-        // vefify the email
-        // Make the is_email_verified to be true
-       await client.db(process.env.DB_NAME).collection("users").updateOne({email: user_email}, { $set: { is_email_verified: true }})
+    if(user_email.trim().length != 0){
         
-       response.send({
-        message: "Email verified successfully", 
-        code: 'success',
-        data: null
-       })
-    }else{
-        response.send({
-            message: "Email verified already. No action needed", 
-            code: "email-verified-already",
-            data: null
-        })
-        
+        const feedback = await user.verify_email(user_email);
+
+        response.send(feedback);
 
     }
+
 
 
 });

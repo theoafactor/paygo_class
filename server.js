@@ -1,5 +1,6 @@
 // 1. bring in express
 const express = require("express");
+var cors = require('cors')
 
 //require dotenv
 require("dotenv").config();
@@ -16,12 +17,22 @@ const user = new UserClass();
 
 
 // Middleware
+server.use(cors());
 server.use(express.json())
 
 
 
 
 // 3. define your routes/endpoints
+
+// login 
+server.post("/login-user", (request, response) => {
+
+    response.send({
+        message: "Login successful with user info"
+    });
+
+})
 
 // registration
 server.post("/register", (request, response) => {

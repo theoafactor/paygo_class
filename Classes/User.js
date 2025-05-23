@@ -4,6 +4,7 @@ require("dotenv").config();
 const { MongoClient } = require("mongodb");
 const url = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.qcoqo.mongodb.net/?retryWrites=true`
 const client = new MongoClient(url);
+const bcrypt = require("bcrypt");
 
 const nodemailer = require("nodemailer");
 
@@ -30,7 +31,7 @@ class User{
             firstname: firstname, 
             lastname: lastname, 
             email: email, 
-            password: password, 
+            password: await bcrypt.hash(password, 5),
             is_email_verified: false, 
             user_role: 0
         }
@@ -175,6 +176,28 @@ class User{
     }
         
 
+    }
+
+
+
+    async loginUser(email, password){
+
+       const result = await client.db(process.env.DB_NAME).collection("users").findOne({email: email, password: password});
+
+       if(result){
+            // the user exists
+            return {
+                message: "User exists", 
+                code: 'success', 
+                data: result
+            }
+       }
+
+       return {
+            message: "User does not exist", 
+            code: "account-not-exist", 
+            data: null
+       }
     }
 
 

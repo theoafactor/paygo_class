@@ -26,16 +26,24 @@ server.use(express.json())
 // 3. define your routes/endpoints
 
 // login 
-server.post("/login-user", (request, response) => {
+server.post("/login-user", async (request, response) => {
+
+    let email = request.body.email; 
+    let password = request.body.password; 
+
+    // check the database to see if the email and password combo exists
+    const feedback = await user.loginUser(email, password);
 
     response.send({
-        message: "Login successful with user info"
+        message: feedback.message, 
+        code: feedback.code, 
+        data: feedback.data
     });
 
 })
 
 // registration
-server.post("/register", (request, response) => {
+server.post("/register", async (request, response) => {
     let firstname = request.body.firstname; 
     let lastname = request.body.lastname;
     let email = request.body.email;
@@ -48,7 +56,7 @@ server.post("/register", (request, response) => {
         // show error
         response.send(feedback);
     }else{
-        const feedback = user.register(firstname, lastname, email, password)
+        const feedback = await user.register(firstname, lastname, email, password)
 
         response.send(feedback);
     }

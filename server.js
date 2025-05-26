@@ -1,5 +1,7 @@
 // 1. bring in express
 const express = require("express");
+const multer  = require('multer')
+const upload = multer({ dest: 'uploads/' })
 var cors = require('cors')
 
 //require dotenv
@@ -41,6 +43,13 @@ server.post("/login-user", async (request, response) => {
     });
 
 })
+
+server.post('/upload_profile', upload.single('upload_profile'), function (req, res, next) {
+    // req.file is the `avatar` file
+    // req.body will hold the text fields, if there were any
+    console.log(req.file)
+
+  })
 
 // registration
 server.post("/register", async (request, response) => {

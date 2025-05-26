@@ -145,7 +145,7 @@ class User{
 
     }
 
-    async verify_email(email){
+    async verify_email(user_email){
 
 
     //check the database to find the state of the user's registration 
@@ -179,12 +179,48 @@ class User{
     }
 
 
+    /**
+     * Retrieves the password of the user and returns it to the caller
+     * @param {*} email 
+     */
+    async retrieveUserPassword(email){
+        const feedback = await client.db(process.env.DB_NAME).collection("users").findOne({ email });
+
+        if(feedback){
+            console.log(feedback);
+            return feedback["password"];
+        }
+
+        return null;
+
+    }
+
+
 
     async loginUser(email, password){
 
-       const result = await client.db(process.env.DB_NAME).collection("users").findOne({email: email, password: password});
+        //password is the plain text password
 
-       if(result){
+        let hashedPassword = await this.retrieveUserPassword(email);
+
+        console.log("Hashed Password: ", hashedPassword);
+
+        if(hashedPassword == null){
+            return {
+                message: "Account does not exist. ", 
+                code:"error",
+                data: null
+            }
+        }
+
+
+
+      let compare_result = await bcrypt.compare(password, hashedPassword);
+
+      if(compare_result){
+        const result = await client.db(process.env.DB_NAME).collection("users").findOne({email: email});
+
+        if(result){
             // the user exists
             return {
                 message: "User exists", 
@@ -197,7 +233,16 @@ class User{
             message: "User does not exist", 
             code: "account-not-exist", 
             data: null
-       }
+        }
+
+
+      }
+
+      
+
+       
+
+      
     }
 
 

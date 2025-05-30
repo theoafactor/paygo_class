@@ -44,10 +44,51 @@ server.post("/login-user", async (request, response) => {
 
 })
 
-server.post('/upload_profile', upload.single('upload_profile'), function (req, res, next) {
+server.post('/upload_profile', upload.single('upload_profile'), function (request, response, next) {
     // req.file is the `avatar` file
     // req.body will hold the text fields, if there were any
-    console.log(req.file)
+    console.log(request.file)
+
+    // check the type of file we are dealing with 
+    const allowed_types = ["image/png", "image/xpng", "image/jpeg", "image/jpg", "image/tiff"];
+
+    let mimetype = request.file.mimetype;
+
+    if(!allowed_types.includes(mimetype)){
+        // this is not the allowed type
+        response.send({
+            message: "This file type is not allowed. Allowed types are: " + String(allowed_types),
+            code: "image-error",
+            data: null
+
+        })
+    }
+
+    // check the size of the file
+    let image_size = request.file.size;
+    image_size = image_size / (1024);
+    image_size = Math.floor(image_size);
+
+    if(image_size > 500){
+        // The image is too large
+        response.send({
+            message: "Image is too large", 
+            code: "image-error",
+            data: null
+        })
+    }else{
+
+        response.send({
+            message: "Image passed",
+            code: "upload-success",
+            data: null
+        })
+
+    }
+
+
+
+
 
   })
 

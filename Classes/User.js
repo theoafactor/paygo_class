@@ -236,6 +236,15 @@ class User{
         }
 
 
+      }else{
+        
+        return {
+            message: "Email/Password combination incorrect", 
+            code: "invalid-details",
+            data: null
+        }
+
+
       }
 
       
